@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小爱音箱操控面板</title>
+    <link href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet">
+    <script src="./jquery-3.7.1.min.js?version=1739838471"></script>
+    <link rel="stylesheet" href="./main.css?version=1739838471">
+    <link rel="icon" href="./favicon.ico">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Z09NC1K7ZW"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments)};
+    gtag('js', new Date());
+    gtag('config', 'G-Z09NC1K7ZW');
+    </script>
+
+    <!-- umami -->
+    <script async defer src="https://umami.hanxi.cc/script.js" data-website-id="7bfb0890-4115-4260-8892-b391513e7e99"></script>
+</head>
+
+<body class="index_page">
+    <div class="player">
+        <h1>小爱音箱播放器
+            <a id="version" href="javascript:void(0);">1.0.0</a><span id="versionnew" class="new-badge"></span>
+        </h1>
+
+        <label for="did">选择播放设备:</label>
+        <select id="did" class="device-selector">
+            <option value="default">默认设备</option>
+        </select>
+
+        <label for="music_list" style="display: flex;align-items: center;">选择播放列表: 
+            <div class="option-inline" onclick="sendcmd('刷新列表')">
+                <span class="material-icons">refresh</span>
+                <span class="tooltip">刷新列表</span>
+            </div>
+        </label>
+        <select id="music_list" class="playlist-selector">
+        </select>
+
+        <label for="music_name" style="display: flex;align-items: center;">选择歌曲:
+            <div class="option-inline" onclick="toggleDelete()">
+                <span class="material-icons">delete</span>
+                <span class="tooltip">删除歌曲</span>
+            </div>
+        </label>
+        <select id="music_name" class="song-selector">
+        </select>
+
+        <div id="device-audio">
+          <progress class="progress" id="progress" value="0" max="100"></progress>
+          <div style="display: flex; justify-content: space-between; width: 100%;">
+              <span class="current-time" id="current-time">0:00</span>
+              <div class="current-song" id="playering-music">当前播放歌曲：无</div>
+              <span class="duration" id="duration">00:00</span>
+          </div>
+        </div>
+        <audio id="audio" controls src="" autoplay></audio>
+
+        <div class="buttons">
+            <div class="player-controls button-group">
+                <div id="modeBtn" onclick="togglePlayMode()" class="control-button device-enable">
+                    <span class="material-icons">shuffle</span>
+                    <span class="tooltip">切换播放模式</span>
+                </div>
+                <div onclick="prevTrack()" class="control-button device-enable">
+                    <span class="material-icons">skip_previous</span>
+                    <span class="tooltip">上一首</span>
+                </div>
+                <div onclick="play()" class="control-button">
+                    <span class="material-icons-outlined play">play_circle_outline</span>
+                    <span class="tooltip">播放</span>
+                </div>
+                <div onclick="nextTrack()" class="control-button device-enable">
+                    <span class="material-icons">skip_next</span>
+                    <span class="tooltip">下一首</span>
+                </div>
+                <div onclick="stopPlay()" class="control-button device-enable">
+                    <span class="material-icons">stop</span>
+                    <span class="tooltip">关机</span>
+                </div>
+
+            </div>
+            <div class="mode-controls button-group">
+                <div onclick="addToFavorites()" class="favorite icon-item device-enable">
+                    <span class="material-icons">favorite</span>
+                    <p>收藏</p>
+                </div>
+                <div onclick="toggleVolume()" class="icon-item device-enable">
+                    <span class="material-icons">volume_up</span>
+                    <p>音量</p>
+                </div>
+                <div onclick="toggleSearch()" class="icon-item device-enable">
+                    <span class="material-icons">search</span>
+                    <p>搜索</p>
+                </div>
+                <div onclick="toggleTimer()" class="icon-item device-enable">
+                    <span class="material-icons">timer</span>
+                    <p>定时</p>
+                </div>
+                <div onclick="togglePlayLink()" class="icon-item device-enable">
+                    <span class="material-icons">emoji_nature</span>
+                    <p>测试</p>
+                </div>
+                <div onclick="openSettings()" class="icon-item">
+                    <span class="material-icons">settings</span>
+                    <p>设置</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 搜索组件 -->
+    <div class="component" id="search-component">
+        <h2>搜索歌曲</h2>
+        <input type="text" id="search" class="search-input" placeholder="请输入搜索关键词(如:MV高清版 周杰伦 七里香)">
+        <label for="music-name" id="music-name-label" style="display: none;">确认选择:</label>
+        <select id="music-name" style="display: none;">
+            <!-- 动态生成选项 -->
+        </select>
+        <input id="music-filename" type="text" placeholder="请输入保存为的文件名称(如:周杰伦七里香)" style="display: none;"></input>
+        <div class="component-button-group">
+            <button onclick="confirmSearch()">确定</button>
+            <button onclick="toggleSearch()">关闭</button>
+        </div>
+    </div>
+
+    <!-- 定时关机组件 -->
+    <div class="component" id="timer-component">
+        <h2>定时关机</h2>
+
+        <button onclick="timedShutDown('10分钟后关机')">10分钟后关机</button>
+        <button onclick="timedShutDown('30分钟后关机')">30分钟后关机</button>
+        <button onclick="timedShutDown('60分钟后关机')">60分钟后关机</button>
+        <span class="tooltip timer-tooltip" style="display: none;">已发送指令</span>
+        <div class="component-button-one">
+            <button onclick="toggleTimer()">关闭</button>
+        </div>
+    </div>
+
+    <!-- 播放链接组件 -->
+    <div class="component" id="playlink-component">
+        <h2>播放链接</h2>
+        <input type="text" id="music-url" class="search-input" placeholder="请输入播放链接"
+            value="https://lhttp.qtfm.cn/live/4915/64k.mp3">
+        <h2>播放文字</h2>
+        <input type="text" id="text-tts" class="search-input" placeholder="请输入文字"
+            value="播放文字测试">
+
+        <div class="component-button-group">
+          <button onclick="playUrl()">播放链接</button>
+          <button onclick="playTts()">播放文字</button>
+          <button onclick="togglePlayLink()">关闭</button>
+        </div>
+    </div>
+
+
+    <!-- 音量组件 -->
+    <div class="component" id="volume-component">
+        <h2>调节音量</h2>
+        <input type="range" id="volume" class="volume-slider" />
+        <div class="component-button-one">
+            <button onclick="toggleVolume()">关闭</button>
+        </div>
+    </div>
+    <!-- 删除确认组件 -->
+    <div class="component" id="delete-component">
+        <h2>警告</h2>
+        <p>你确定要删除歌曲 <span id="delete-music-name"></span> 吗？</p>
+        <p style="font-weight: bold;">注意：该操作会永久删除该歌曲且不可撤销</p>
+        <div class="component-button-group">
+            <button onclick="confirmDelete()">确定</button>
+            <button onclick="toggleDelete()">关闭</button>
+        </div>
+    </div>
+    <!-- 警告组件 -->
+    <div class="component" id="warning-component">
+        <h2>警告</h2>
+        <p>当前页面的HOST与设置中的HOST不一致，请检查是否设置错误</p>
+        <p>当前HOST: <span id="local-host"></span></p>
+        <p>设置中的HOST: <span id="setting-host"></span></p>
+        <div class="component-button-group">
+          <a href="./setting.html" target="_blank"><button>立即修改</button></a>
+          <button onclick="nowarning()">继续并不再显示</button>
+          <button onclick="toggleWarning()">取消</button>
+        </div>
+    </div>
+    <!-- 更新组件 -->
+    <div class="component" id="update-component" style="display: none;">
+        <h2>更新</h2>
+        <label for="update-version" style="display: flex;align-items: center;">选择版本:
+            <a class="option-inline changelog-button" href="https://xdocs.hanxi.cc/issues/changelog.html" target="_blank">
+              <span class="material-icons">list_alt</span>
+              <span>版本日志</span>
+            </a>
+        </label>
+
+        <select id="update-version" class="version-selector">
+            <option value="test" selected>test</option>
+        </select>
+
+        <label for="lite">选择类型:</label>
+        <select id="lite" class="version-selector">
+            <option value="true" selected>轻量(不更新ffmpeg)</option>
+            <option value="false">完整(更新ffmpeg)</option>
+        </select>
+
+        <div class="component-button-group">
+            <button onclick="doUpdates()">更新</button>
+            <button onclick="toggleUpdate()">关闭</button>
+        </div>
+    </div>
+    <div class="footer">
+      Powered by XiaoMusic
+    </div>
+
+    <script src="./md.js?version=1739838471">
+    </script>
+</body>
+
+</html>

@@ -1,7 +1,9 @@
-version="$1"
-sed -i "s/version.*/version = \"$version\"/" ./pyproject.toml
-git diff
-git add ./pyproject.toml
-git commit -m "new version v$version"
-git tag v$version
+#!/bin/bash
+
+./update-static-version.py
+git add xiaomusic/static
+git commit -m 'build: update static version'
+
+cz bump --check-consistency
+
 git push -u origin main --tags
